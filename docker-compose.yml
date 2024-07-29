@@ -1,0 +1,62 @@
+#version: "3.8"
+#services:
+#  invoiceDB:
+#    image: postgres:13
+#    ports:
+#      - 127.0.0.1:5432:5432
+#    volumes:
+#      - ./postgres/init/:/docker-entrypoint-initdb.d/
+#    environment:
+#      POSTGRES_DB: invoiceDB
+#      POSTGRES_USER: cacttus
+#      POSTGRES_PASSWORD: cacttus
+#      PGDATA: /var/lib/postgresql/data/cacttus
+#    networks:
+#      - backend
+#
+#networks:
+#  backend:
+#volumes:
+#  my-db:
+#
+#version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: cacttus
+      POSTGRES_PASSWORD: cacttus
+      POSTGRES_DB: invoiceDB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  spring-boot-app:
+    build:
+      context: ./invoice-api
+      dockerfile: Dockerfile
+    container_name: spring-boot-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/invoiceDB
+      SPRING_DATASOURCE_USERNAME: cacttus
+      SPRING_DATASOURCE_PASSWORD: cacttus
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+
+  vue-frontend:
+    build:
+      context: ./invoice-front
+      dockerfile: Dockerfile
+    container_name: vue-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - spring-boot-app
+
+volumes:
+  postgres_data:
